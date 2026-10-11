@@ -9,7 +9,7 @@ Built with React, TypeScript, Vite, and CSS Modules. No backend, accounts, analy
 Double-click `dist/chroma-nudge.html`. It contains the app, styles, and fonts. Photos stay in browser memory; the standalone build blocks network connections through Content Security Policy. No account, upload, tracking, or local photo storage.
 
 1. Open a JPEG, PNG, WebP, or AVIF, or explore the six-color demo.
-2. Click regions of interest. Drag dots, or focus them and use arrow keys (Shift moves 10 pixels). Name up to 16 samples.
+2. Optionally click **Auto sample** for up to 4–6 dominant colors (five by default), or click regions of interest. Auto sampling keeps existing samples, skips similar colors, and offers Undo for its latest added batch. Drag dots, or focus them and use arrow keys (Shift moves 10 pixels). Name up to 16 samples.
 3. Compare Natural, Pure hues, and Harmony guide. Choose a harmony or automatic fitting. Anchor one chromatic sample if its color should stay fixed.
 4. Adjust strength, move cap, and alignment tolerance. Custom mode supports independent target dragging and numeric hue entry for the selected sample.
 5. Export a PNG reference sheet, an editable SVG, or a JSON study. PNG sheets use 2× resolution for crisp text. Exports contain colors and coordinates, not the photo. Hex buttons copy colors when the browser permits clipboard access.
@@ -41,6 +41,8 @@ The [fitting method](METHOD.md) documents the research basis, template definitio
 
 Browser-decoded canvas samples are averaged over 5 × 5 analysis pixels. Photos above 2,400 pixels on their long edge are resized; transparent pixels are composited over white. Inputs over 40 MB or 60 megapixels are rejected. No RAW support or professional color-managed grading pipeline. HSL lightness preservation does not preserve perceptual brightness. The app supplies a reference and leaves actual editing to your photo editor.
 
+Auto sampling clusters a bounded grid of patches in Oklab and places points on real matching patches. It favors large color areas, includes neutrals, merges near-duplicates, and may return fewer colors for simple photos. Small accents can be missed; add them manually. Extraction runs locally and only when requested.
+
 Studies are transient. Clearing or closing discards them. JSON export is a reference format, not a session import format.
 
 ## Code boundaries
@@ -48,6 +50,7 @@ Studies are transient. Clearing or closing discards them. JSON export is a refer
 - `src/domain/color.ts`: sRGB/HSL conversion and hue arithmetic.
 - `src/domain/harmony.ts`: deterministic fitting, ranking, and nudges.
 - `src/domain/photo.ts`: image decoding and patch sampling.
+- `src/domain/autoSample.ts`: deterministic dominant-color extraction; `perceptualColor.ts`: Oklab conversion and comparison.
 - `src/domain/sampleAnalysis.ts`: shared target and nudge calculations.
 - `src/domain/export.ts`: portable reference data; `referenceSheet.ts`: SVG formatting.
 - `src/browser/`: PNG rendering and file downloads.

@@ -1,4 +1,4 @@
-import { type Hsl, rgbToHsl } from './color';
+import { type Hsl, type Rgb, rgbToHsl } from './color';
 
 export interface Photo {
   url: string;
@@ -52,6 +52,10 @@ export async function decodePhoto(file: File): Promise<Photo> {
 }
 
 export function samplePhoto(photo: Photo, position: { x: number; y: number }): Hsl {
+  return rgbToHsl(samplePhotoRgb(photo, position));
+}
+
+export function samplePhotoRgb(photo: Photo, position: { x: number; y: number }): Rgb {
   const x = Math.min(photo.width - 1, Math.max(0, Math.round(position.x * (photo.width - 1))));
   const y = Math.min(photo.height - 1, Math.max(0, Math.round(position.y * (photo.height - 1))));
   let red = 0;
@@ -67,7 +71,7 @@ export function samplePhoto(photo: Photo, position: { x: number; y: number }): H
       count++;
     }
   }
-  return rgbToHsl({ r: red / count, g: green / count, b: blue / count });
+  return { r: red / count, g: green / count, b: blue / count };
 }
 
 export function createDemo(): { photo: Photo; samples: Sample[] } {

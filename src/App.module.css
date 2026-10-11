@@ -187,6 +187,29 @@
   gap: 15px;
   flex-wrap: wrap;
 }
+.autoSampleActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.autoSampleCount {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.autoSampleCount select {
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #afb9aa;
+  border-radius: 3px;
+  background: #faf9f4;
+  color: #253b30;
+}
+.autoSampleHelp {
+  margin: 8px 0 16px;
+}
 .sampleActions .sampleActionButton {
   padding: 8px 10px;
   min-height: 36px;

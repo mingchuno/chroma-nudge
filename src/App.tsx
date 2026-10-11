@@ -30,6 +30,11 @@ export function App() {
     setMessage,
     error,
     isLoading,
+    autoSampleCount,
+    setAutoSampleCount,
+    canUndoAutoSample,
+    autoSample,
+    undoAutoSample,
     isDraggingFile,
     setIsDraggingFile,
     fileInput,
@@ -164,6 +169,39 @@ export function App() {
                   onSelect={setSelectedId}
                 />
                 <p className={sharedStyles.caption}>Click to sample. Drag a dot to refine.</p>
+                <div className={styles.autoSampleActions}>
+                  <button
+                    type="button"
+                    className={sharedStyles.secondary}
+                    disabled={isLoading || samples.length >= 16}
+                    onClick={autoSample}
+                  >
+                    Auto sample
+                  </button>
+                  <label className={styles.autoSampleCount}>
+                    Colors
+                    <select
+                      value={autoSampleCount}
+                      disabled={isLoading}
+                      onChange={(event) => {
+                        const count = Number(event.target.value);
+                        if (count === 4 || count === 5 || count === 6) setAutoSampleCount(count);
+                      }}
+                    >
+                      <option value={4}>4</option>
+                      <option value={5}>5</option>
+                      <option value={6}>6</option>
+                    </select>
+                  </label>
+                  {canUndoAutoSample && (
+                    <button type="button" className={sharedStyles.textButton} onClick={undoAutoSample}>
+                      Undo auto sample
+                    </button>
+                  )}
+                </div>
+                <p className={`${sharedStyles.caption} ${styles.autoSampleHelp}`}>
+                  Adds dominant colors, keeps your samples. Simple photos may yield fewer colors.
+                </p>
                 <div className={styles.sampleActions}>
                   <button
                     type="button"
@@ -185,6 +223,10 @@ export function App() {
                 <details className={sharedStyles.details}>
                   <summary>Sampling help & keyboard controls</summary>
                   <p>Focus a dot and use arrow keys for precision; Shift moves 10 pixels.</p>
+                  <p>
+                    Auto sample finds large color areas, including neutrals. Small accents may be missed;
+                    click them to add a sample. Colors already represented are skipped.
+                  </p>
                   <p>
                     Choose subjects, foliage, sky, shadows, and highlights you actually want to grade. Five to
                     eight distinct regions usually give a useful study. This is a 5 × 5 pixel average at the

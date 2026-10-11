@@ -4,6 +4,76 @@ import { expect, type Page, test } from '@playwright/test';
 
 const standalone = pathToFileURL(resolve('dist/chroma-nudge.html')).href;
 
+test('auto samples only on request, preserves manual edits, skips duplicates and undoes its batch', async ({
+  page,
+  baseURL,
+}) => {
+  await page.goto(baseURL ?? standalone);
+  const png = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 200;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('No canvas');
+    ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FF00FF'].forEach((color, index) => {
+      context.fillStyle = color;
+      context.fillRect(index * 100, 0, 100, 200);
+    });
+    return canvas.toDataURL().split(',')[1] ?? '';
+  });
+  await page
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'six-colors.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') });
+  await expect(page.getByRole('img', { name: 'six-colors.png' })).toBeVisible();
+  await expect(page.locator('[data-sample-id]')).toHaveCount(0);
+  await expect(page.getByRole('combobox', { name: 'Colors', exact: true })).toHaveValue('5');
+  for (const count of ['4', '5', '6']) {
+    await page.getByRole('combobox', { name: 'Colors', exact: true }).selectOption(count);
+    await page.getByRole('button', { name: 'Auto sample', exact: true }).click();
+    await expect(page.locator('[data-sample-id]')).toHaveCount(Number(count));
+    await page.getByRole('button', { name: 'Clear samples', exact: true }).click();
+  }
+  const image = await page.getByRole('img', { name: 'six-colors.png' }).boundingBox();
+  if (!image) throw new Error('No photo');
+  await page
+    .getByRole('group', { name: /^Photo sampler/ })
+    .click({ position: { x: image.width / 12, y: image.height / 2 } });
+  await page.getByRole('textbox', { name: 'Name sample 1', exact: true }).fill('Keep this red');
+  await page.getByRole('button', { name: 'Anchor sample 1', exact: true }).click();
+  const before = await exportJson(page);
+  await page.getByRole('button', { name: 'Auto sample', exact: true }).click();
+  await expect(page.locator('[data-sample-id]')).toHaveCount(6);
+  const added = await exportJson(page);
+  expect(added.samples[0]).toEqual(before.samples[0]);
+  expect(added.samples.map((sample: { original: string }) => sample.original).sort()).toEqual([
+    '#0000FF',
+    '#00FF00',
+    '#00FFFF',
+    '#FF0000',
+    '#FF00FF',
+    '#FFFF00',
+  ]);
+  await page.getByRole('button', { name: 'Auto sample', exact: true }).click();
+  await expect(page.locator('[data-sample-id]')).toHaveCount(6);
+  await expect(page.getByRole('status', { name: '', exact: true })).toContainText('already sampled');
+  await page.getByRole('textbox', { name: 'Name sample 2', exact: true }).fill('Editable auto sample');
+  await page.locator('[data-sample-id]').nth(1).focus();
+  await page.keyboard.press('ArrowRight');
+  await page.getByRole('button', { name: 'Undo auto sample', exact: true }).click();
+  expect((await exportJson(page)).samples).toEqual(before.samples);
+  await page.getByRole('button', { name: 'Clear samples', exact: true }).click();
+  for (let index = 0; index < 15; index++)
+    await page.getByRole('button', { name: 'Add center sample' }).click();
+  await page.getByRole('button', { name: 'Auto sample', exact: true }).click();
+  await expect(page.locator('[data-sample-id]')).toHaveCount(16);
+  await expect(page.getByRole('button', { name: 'Auto sample', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Undo auto sample', exact: true }).click();
+  await expect(page.locator('[data-sample-id]')).toHaveCount(15);
+  await page.getByRole('button', { name: 'Clear workspace', exact: true }).click();
+  await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
+  await expect(page.getByRole('button', { name: 'Undo auto sample', exact: true })).toHaveCount(0);
+});
+
 async function exportJson(page: Page) {
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export full study as JSON' }).click();

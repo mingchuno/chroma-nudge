@@ -27,6 +27,20 @@ The output is a reference palette and directional notes, not an edited photograp
 
 [Photo sampling](src/domain/photo.ts) uses browser-decoded sRGB canvas pixels, averages a 5 × 5 patch clipped at image edges, and composites transparency over white. The analysis image is resized to at most 2,400 pixels on its long edge. Each chosen sample contributes independently; sampling the same region repeatedly increases its influence.
 
+## Optional automatic sampling
+
+[Auto sampling](src/domain/autoSample.ts) selects up to four, five or six patches only when requested. It uses the existing decoded photo and the same 5 × 5 patch average as manual sampling; no network or trained model is involved.
+
+1. Collect an area-uniform grid of at most 16,000 patch candidates, retaining normalized coordinates. Convert their sRGB values through linear RGB to Cartesian Oklab using [Ottosson's conversion](https://bottosson.github.io/posts/oklab/).
+2. Initialize centres deterministically from 5-bit-per-channel RGB histogram bins. Choose the most populated bin first, then maximize population × squared distance to the nearest existing centre. Run k-means for at most 20 iterations, stopping when every centre's squared movement is below `1e-8`; discard empty clusters. Histogram bins seed the process; clustering uses unquantized patch colours.
+3. Repeatedly merge the closest pair of centres within Oklab distance `0.045`, recomputing the merged mean. Sort by candidate population. Discard clusters below 2% of sampled area, always retaining the largest cluster.
+4. For each cluster choose the actual member patch nearest its centre. Colour-distance ties prefer a member near the cluster's mean image position. Return that patch's coordinates and HSL colour, so dragging continues to use the same sampling rule.
+5. Skip extracted colours within Oklab distance `0.045` of existing samples, append within the 16-sample limit, and preserve existing names, positions and anchors. Undo removes only the latest added batch, including edits to that batch; subsequent manual samples remain.
+
+Merge and coverage thresholds are project heuristics, not calibrated perceptual or aesthetic confidence. Dominance represents area, not subject importance. Small accents, periodic textures and gradients can be missed or split. Transparent areas already appear as white because decoding composites them. Neutrals remain eligible for extraction but retain the harmony engine's existing protection. Extracted coverage does not change harmony weights: each retained sample remains one chosen interest.
+
+Fixture tests cover distinct colours, neutrals, low-colour images, lightness variation, narrow images, representative patch correspondence and repeatability. Browser tests cover optional invocation, count choices, preservation, duplicate skipping, undo and capacity in both builds. A generated 2,400 × 1,600 image measured approximately 23 ms for the synchronous click handler on the development machine and 64 ms with Chromium CPU throttled 4×. This single synthetic check does not establish performance on physical phones or palette quality across real photographs.
+
 ## Implementation
 
 - [Color conversion](src/domain/color.ts): HSL conversion, chroma, and circular hue arithmetic.
