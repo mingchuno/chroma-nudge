@@ -170,9 +170,10 @@
 }
 .filename small {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: #626e5e;
   margin-top: 4px;
+  font-variant-numeric: tabular-nums;
 }
 .workspace {
   display: grid;
@@ -200,7 +201,7 @@
   font-size: 12px;
 }
 .autoSampleCount select {
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 10px;
   border: 1px solid #afb9aa;
   border-radius: 3px;
@@ -212,8 +213,8 @@
 }
 .sampleActions .sampleActionButton {
   padding: 8px 10px;
-  min-height: 36px;
-  font-size: 11px;
+  min-height: 44px;
+  font-size: 12px;
 }
 .explanation {
   display: grid;
@@ -248,7 +249,7 @@
   align-items: center;
   border-top: 1px solid #c9cdc2;
   padding: 24px 0;
-  font-size: 10px;
+  font-size: 12px;
   color: #626e5e;
 }
 .footer > span {
@@ -290,7 +291,7 @@
     margin: 36px 0 32px;
   }
   .intro h1 {
-    font-size: 46px;
+    font-size: clamp(36px, 11.8vw, 46px);
   }
   .introRight p {
     font-size: 13px;
@@ -324,6 +325,7 @@
     line-height: 1.6;
   }
   .empty {
+    min-height: 390px;
     padding: 40px 17px;
   }
   .empty h2 {
@@ -392,5 +394,20 @@
   }
   .brand {
     gap: 9px;
+  }
+}
+
+.helpLink {
+  padding: 12px 0;
+}
+.toolbar > button {
+  flex-shrink: 0;
+}
+.filename {
+  min-width: 0;
+}
+@media (max-width: 650px) {
+  .autoSampleCount select {
+    font-size: 16px;
   }
 }

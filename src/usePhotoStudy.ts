@@ -1,9 +1,10 @@
 import { type SetStateAction, useMemo, useRef, useState } from 'react';
+import { createDemo, decodePhoto } from './browser/photo';
 import { type AutoSampleCount, extractPhotoSamples } from './domain/autoSample';
 import { type Hsl, hasMeaningfulHue } from './domain/color';
 import { fitHarmony, type HarmonyKind, rankHarmonies } from './domain/harmony';
 import { areSimilarColors } from './domain/perceptualColor';
-import { createDemo, decodePhoto, type Photo, type Sample, samplePhoto } from './domain/photo';
+import { type Photo, type Sample, samplePhoto } from './domain/photo';
 export type WheelMode = 'natural' | 'pure' | 'guide';
 export type Selection = 'auto' | 'custom' | HarmonyKind;
 export function usePhotoStudy() {
@@ -150,6 +151,7 @@ export function usePhotoStudy() {
   function clearWorkspace() {
     ++importSequence.current;
     setIsLoading(false);
+    setError('');
     setPhoto(undefined);
     clearSamples();
     setMessage('Photo cleared from this workspace.');
