@@ -293,3 +293,48 @@ for (const replacement of ['clear', 'demo', 'newer import'] as const) {
     }
   });
 }
+
+test('magnifies the active sample during dragging and dismisses on release or cancellation', async ({
+  page,
+  baseURL,
+}) => {
+  await page.goto(baseURL ?? standalone);
+  await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
+  const surface = page.getByRole('group', { name: /^Photo sampler/ });
+  const loupe = page.getByTestId('sample-loupe');
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await surface.scrollIntoViewIfNeeded();
+    const bounds = await surface.boundingBox();
+    if (!bounds) throw new Error('Photo bounds missing');
+    await page.mouse.move(bounds.x + bounds.width / 6, bounds.y + bounds.height / 4);
+    await page.mouse.down();
+    await expect(loupe).toBeVisible();
+    await expect(loupe).toContainText('#D3A878');
+    await page.mouse.move(bounds.x + bounds.width - 1, bounds.y + 1);
+    await expect(loupe).toContainText('#3F4E36');
+    const preview = await loupe.boundingBox();
+    if (!preview) throw new Error('Loupe bounds missing');
+    expect(preview.x).toBeGreaterThanOrEqual(0);
+    expect(preview.x + preview.width).toBeLessThanOrEqual(width);
+    expect(preview.y).toBeGreaterThanOrEqual(0);
+    expect(preview.y + preview.height).toBeLessThanOrEqual(1000);
+    await page.mouse.up();
+    await expect(loupe).toHaveCount(0);
+  }
+  const bounds = await surface.boundingBox();
+  if (!bounds) throw new Error('Photo bounds missing');
+  const touch = await page.context().newCDPSession(page);
+  await touch.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }],
+  });
+  await expect(loupe).toBeVisible();
+  await touch.send('Input.dispatchTouchEvent', {
+    type: 'touchMove',
+    touchPoints: [{ x: bounds.x + bounds.width / 4, y: bounds.y + bounds.height / 3 }],
+  });
+  await expect(loupe).toContainText('#D3A878');
+  await touch.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+  await expect(loupe).toHaveCount(0);
+});

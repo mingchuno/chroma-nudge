@@ -1,7 +1,8 @@
-import { type KeyboardEvent, type PointerEvent, useRef } from 'react';
+import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react';
 import { hslToHex } from '../domain/color';
 import type { Photo, Sample } from '../domain/photo';
 import styles from './PhotoSampler.module.css';
+import { SampleLoupe } from './SampleLoupe';
 
 interface Props {
   photo: Photo;
@@ -15,6 +16,19 @@ export function PhotoSampler({ photo, samples, selectedId, onPlace, onSelect }: 
   const surface = useRef<HTMLFieldSetElement>(null);
   const draggedId = useRef<number | undefined>(undefined);
 
+  const [drag, setDrag] = useState<{ id: number; pointerId: number; position: { x: number; y: number } }>();
+  const activeSample = samples.find((sample) => sample.id === drag?.id);
+
+  function previewPosition(point: { x: number; y: number }) {
+    const bounds = surface.current?.getBoundingClientRect();
+    if (!bounds) return { x: 0, y: 0 };
+    return { x: bounds.left + point.x * bounds.width, y: bounds.top + point.y * bounds.height };
+  }
+  function finishDrag(event: PointerEvent<HTMLFieldSetElement>) {
+    if (event.pointerId !== drag?.pointerId) return;
+    draggedId.current = undefined;
+    setDrag(undefined);
+  }
   function position(event: PointerEvent) {
     const bounds = surface.current?.getBoundingClientRect();
     if (!bounds) return { x: 0.5, y: 0.5 };
@@ -24,10 +38,14 @@ export function PhotoSampler({ photo, samples, selectedId, onPlace, onSelect }: 
     };
   }
   function start(event: PointerEvent<HTMLFieldSetElement>) {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || draggedId.current !== undefined) return;
     const point = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-sample-id]');
     const id = point ? Number(point.dataset.sampleId) : undefined;
-    draggedId.current = onPlace(position(event), id);
+    const pointPosition = position(event);
+    const placedId = onPlace(pointPosition, id);
+    if (placedId === undefined) return;
+    draggedId.current = placedId;
+    setDrag({ id: placedId, pointerId: event.pointerId, position: previewPosition(pointPosition) });
     event.currentTarget.setPointerCapture(event.pointerId);
   }
   function movePoint(event: KeyboardEvent<HTMLButtonElement>, sample: Sample) {
@@ -59,14 +77,14 @@ export function PhotoSampler({ photo, samples, selectedId, onPlace, onSelect }: 
         aria-label="Photo sampler. Use Add center sample, then arrow keys on sample buttons to move them."
         onPointerDown={start}
         onPointerMove={(event) => {
-          if (draggedId.current !== undefined) onPlace(position(event), draggedId.current);
+          if (draggedId.current === undefined || event.pointerId !== drag?.pointerId) return;
+          const point = position(event);
+          onPlace(point, draggedId.current);
+          setDrag({ id: draggedId.current, pointerId: event.pointerId, position: previewPosition(point) });
         }}
-        onPointerUp={() => {
-          draggedId.current = undefined;
-        }}
-        onPointerCancel={() => {
-          draggedId.current = undefined;
-        }}
+        onPointerUp={finishDrag}
+        onPointerCancel={finishDrag}
+        onLostPointerCapture={finishDrag}
       >
         <img src={photo.url} alt={photo.name} draggable={false} />
         {samples.map((sample, index) => (
@@ -89,6 +107,7 @@ export function PhotoSampler({ photo, samples, selectedId, onPlace, onSelect }: 
           </button>
         ))}
       </fieldset>
+      {drag && activeSample && <SampleLoupe photo={photo} sample={activeSample} position={drag.position} />}
     </div>
   );
 }
