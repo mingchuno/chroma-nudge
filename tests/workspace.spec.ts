@@ -62,8 +62,7 @@ test('auto samples only on request, preserves manual edits, skips duplicates and
   await page.getByRole('button', { name: 'Undo auto sample', exact: true }).click();
   expect((await exportJson(page)).samples).toEqual(before.samples);
   await page.getByRole('button', { name: 'Clear samples', exact: true }).click();
-  for (let index = 0; index < 15; index++)
-    await page.getByRole('button', { name: 'Add center sample' }).click();
+  for (let index = 0; index < 15; index++) await addKeyboardSample(page);
   await page.getByRole('button', { name: 'Auto sample', exact: true }).click();
   await expect(page.locator('[data-sample-id]')).toHaveCount(16);
   await expect(page.getByRole('button', { name: 'Auto sample', exact: true })).toBeDisabled();
@@ -73,6 +72,12 @@ test('auto samples only on request, preserves manual edits, skips duplicates and
   await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
   await expect(page.getByRole('button', { name: 'Undo auto sample', exact: true })).toHaveCount(0);
 });
+
+async function addKeyboardSample(page: Page) {
+  const photo = page.getByRole('group', { name: /^Photo sampler/ });
+  await photo.focus();
+  await photo.press('Enter');
+}
 
 async function exportJson(page: Page) {
   const pending = page.waitForEvent('download');
@@ -134,12 +139,13 @@ test('opens directly from disk and samples a local PNG without network requests'
   await expect(page.getByRole('alert')).toContainText('could not read');
   await expect(page.getByRole('img', { name: 'local-study.png' })).toBeVisible();
   await page.getByRole('button', { name: 'Clear samples', exact: true }).click();
-  for (let index = 0; index < 16; index++)
-    await page.getByRole('button', { name: 'Add center sample' }).click();
-  await expect(page.getByRole('button', { name: 'Add center sample' })).toBeDisabled();
+  for (let index = 0; index < 16; index++) await addKeyboardSample(page);
+  await addKeyboardSample(page);
+  await expect(page.locator('[data-sample-id]')).toHaveCount(16);
   await expect(page.locator('ol > li')).toHaveCount(16);
   await page.getByRole('button', { name: 'Remove sample 1', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Add center sample' })).toBeEnabled();
+  await addKeyboardSample(page);
+  await expect(page.locator('[data-sample-id]')).toHaveCount(16);
   expect(network).toEqual([]);
   expect(errors).toEqual([]);
 });

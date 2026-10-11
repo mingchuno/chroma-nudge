@@ -211,14 +211,6 @@ export function App() {
                 <div className={styles.sampleActions}>
                   <button
                     type="button"
-                    className={`${sharedStyles.secondary} ${styles.sampleActionButton}`}
-                    disabled={samples.length >= MAX_SAMPLES}
-                    onClick={() => placeSample({ x: 0.5, y: 0.5 })}
-                  >
-                    Add center sample
-                  </button>
-                  <button
-                    type="button"
                     className={sharedStyles.textButton}
                     disabled={!samples.length}
                     onClick={clearSamples}
@@ -228,7 +220,10 @@ export function App() {
                 </div>
                 <details className={sharedStyles.details}>
                   <summary>Sampling help & keyboard controls</summary>
-                  <p>Focus a dot and use arrow keys for precision; Shift moves 10 pixels.</p>
+                  <p>
+                    Focus the photo and press Enter or Space to add a sample. Focus a dot and use arrow keys
+                    for precision; Shift moves 10 pixels.
+                  </p>
                   <p>
                     Auto sample finds large color areas, including neutrals. Small accents may be missed;
                     click them to add a sample. Colors already represented are skipped.

@@ -74,7 +74,19 @@ export function PhotoSampler({ photo, samples, selectedId, onPlace, onSelect }: 
         ref={surface}
         className={styles.photoSurface}
         style={{ aspectRatio: `${photo.width}/${photo.height}` }}
-        aria-label="Photo sampler. Use Add center sample, then arrow keys on sample buttons to move them."
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: The photo surface supports keyboard sample placement while retaining its sample group semantics.
+        tabIndex={0}
+        aria-label="Photo sampler. Press Enter or Space to add a sample, then use arrow keys on sample buttons to move it."
+        onKeyDown={(event) => {
+          if (event.target !== event.currentTarget || !['Enter', ' '].includes(event.key)) return;
+          event.preventDefault();
+          const id = onPlace({ x: 0.5, y: 0.5 });
+          if (id !== undefined) {
+            requestAnimationFrame(() =>
+              surface.current?.querySelector<HTMLButtonElement>(`[data-sample-id="${id}"]`)?.focus(),
+            );
+          }
+        }}
         onPointerDown={start}
         onPointerMove={(event) => {
           if (draggedId.current === undefined || event.pointerId !== drag?.pointerId) return;

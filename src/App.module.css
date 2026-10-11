@@ -211,11 +211,7 @@
 .autoSampleHelp {
   margin: 8px 0 16px;
 }
-.sampleActions .sampleActionButton {
-  padding: 8px 10px;
-  min-height: 44px;
-  font-size: 12px;
-}
+
 .explanation {
   display: grid;
   grid-template-columns: 0.8fr 1.4fr;
