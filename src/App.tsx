@@ -33,7 +33,6 @@ export function App() {
     tolerance,
     setTolerance,
     intention,
-    setIntention,
     message,
     setMessage,
     error,
@@ -64,12 +63,12 @@ export function App() {
           <span className={styles.brandMark} aria-hidden="true" />
           Chroma Nudge
         </a>
-        <span className={styles.privacy}>
-          Local by design <span className={styles.privacyDot} />
-        </span>
+        <a className={styles.helpLink} href="#explanation">
+          How it works
+        </a>
       </header>
       <main id="main">
-        <div className={styles.intro}>
+        <div className={`${styles.intro} ${photo ? styles.introCompact : ''}`}>
           <h1>
             Find the harmony.
             <br />
@@ -80,15 +79,6 @@ export function App() {
               A color study for your next edit. Sample what matters, explore a harmony, and take a gentle
               nudge back to your photo editor.
             </p>
-            <label className={styles.intention}>
-              What should this photo feel like?
-              <input
-                value={intention}
-                onChange={(event) => setIntention(event.target.value)}
-                placeholder="e.g. quiet light, warm memories"
-                maxLength={180}
-              />
-            </label>
           </div>
         </div>
         <input
@@ -102,13 +92,10 @@ export function App() {
             event.target.value = '';
           }}
         />
-        <div
-          role="status"
-          aria-live="polite"
-          className={message || isLoading ? styles.status : styles.hiddenInput}
-        >
+        <div role="status" aria-live="polite" aria-atomic="true" className={styles.hiddenInput}>
           {isLoading ? 'Reading your photo locally…' : message}
         </div>
+        {isLoading && <p className={styles.status}>Reading your photo locally…</p>}
         {error && (
           <p role="alert" className={styles.error}>
             {error}
@@ -199,11 +186,7 @@ export function App() {
                   onPlace={placeSample}
                   onSelect={setSelectedId}
                 />
-                <p className={styles.caption}>
-                  Click to sample. Drag a dot to refine.
-                  <br />
-                  Focus a dot and use arrow keys for precision; Shift moves 10 pixels.
-                </p>
+                <p className={styles.caption}>Click to sample. Drag a dot to refine.</p>
                 <div className={styles.sampleActions}>
                   <button
                     type="button"
@@ -227,7 +210,8 @@ export function App() {
                   </button>
                 </div>
                 <details className={styles.details}>
-                  <summary>How to sample well</summary>
+                  <summary>Sampling help & keyboard controls</summary>
+                  <p>Focus a dot and use arrow keys for precision; Shift moves 10 pixels.</p>
                   <p>
                     Choose subjects, foliage, sky, shadows, and highlights you actually want to grade. Five to
                     eight distinct regions usually give a useful study. This is a 5 × 5 pixel average at the
@@ -337,31 +321,38 @@ export function App() {
                       onChange={(event) => setStrength(Number(event.target.value) / 100)}
                     />
                   </label>
-                  <div className={styles.twoControls}>
-                    <label>
-                      Maximum move <output>{maxShift}°</output>
-                      <input
-                        aria-label="Maximum move"
-                        type="range"
-                        min="5"
-                        max="180"
-                        step="5"
-                        value={maxShift}
-                        onChange={(event) => setMaxShift(Number(event.target.value))}
-                      />
-                    </label>
-                    <label>
-                      Aligned within <output>{tolerance}°</output>
-                      <input
-                        aria-label="Aligned within"
-                        type="range"
-                        min="0"
-                        max="15"
-                        value={tolerance}
-                        onChange={(event) => setTolerance(Number(event.target.value))}
-                      />
-                    </label>
-                  </div>
+                  <details className={styles.details}>
+                    <summary>Fine-tune the nudge</summary>
+                    <div className={styles.twoControls}>
+                      <label>
+                        Maximum move <output>{maxShift}°</output>
+                        <input
+                          aria-label="Maximum move"
+                          type="range"
+                          min="5"
+                          max="180"
+                          step="5"
+                          value={maxShift}
+                          onChange={(event) => setMaxShift(Number(event.target.value))}
+                        />
+                      </label>
+                      <label>
+                        Aligned within <output>{tolerance}°</output>
+                        <input
+                          aria-label="Aligned within"
+                          type="range"
+                          min="0"
+                          max="15"
+                          value={tolerance}
+                          onChange={(event) => setTolerance(Number(event.target.value))}
+                        />
+                      </label>
+                    </div>
+                    <p>
+                      Maximum move caps the hue shift before strength is applied. Colors within the alignment
+                      tolerance stay unchanged.
+                    </p>
+                  </details>
                 </div>
                 <details className={styles.details}>
                   <summary>Compare all harmony fits</summary>
@@ -408,8 +399,8 @@ export function App() {
             </div>
           </>
         )}
-        <section className={styles.explanation}>
-          <h2>A direction, not a prescription.</h2>
+        <section id="explanation" className={styles.explanation} aria-labelledby="explanation-title">
+          <h2 id="explanation-title">A direction, not a prescription.</h2>
           <p>
             Harmony is a geometric starting point. Protect skin tones and meaningful colors, and let your
             intention lead. Suggested colors preserve HSL saturation and lightness; perceived brightness can
@@ -444,6 +435,16 @@ export function App() {
           </details>
         </section>
       </main>
+      {message && !isLoading && (
+        <div className={styles.notification}>
+          <p>{message}</p>
+          <button type="button" aria-label="Dismiss notification" onClick={() => setMessage('')}>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+              <path d="m4 4 8 8M12 4l-8 8" />
+            </svg>
+          </button>
+        </div>
+      )}
       <footer className={styles.footer}>
         <span>Chroma Nudge</span>
         <p>Made for thoughtful color. Everything happens in your browser.</p>

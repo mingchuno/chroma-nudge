@@ -440,12 +440,6 @@
   border-left: 1px solid #c9cdc2;
   padding-left: 26px;
 }
-.referenceIntro {
-  font-size: 11px;
-  line-height: 1.65;
-  color: #596653;
-  margin: 0 0 18px;
-}
 .samples {
   margin: 0;
   padding: 0;
@@ -708,7 +702,6 @@
   .caption {
     font-size: 12px;
   }
-  .referenceIntro,
   .harmonySummary p,
   .controlNote {
     font-size: 12px;
@@ -763,4 +756,92 @@
 .segmented {
   margin: 0;
   min-inline-size: 0;
+}
+
+.helpLink {
+  font-size: 12px;
+  text-underline-offset: 4px;
+}
+.introCompact {
+  margin: 32px 0;
+}
+.introCompact h1 {
+  font-size: clamp(32px, 3vw, 44px);
+}
+.introRight p {
+  margin-bottom: 0;
+}
+.referenceHelp {
+  font-size: 12px;
+  line-height: 1.65;
+  color: #526153;
+  margin: 0 0 18px;
+}
+.referenceHelp summary {
+  cursor: pointer;
+  color: #253b30;
+  padding: 7px 0;
+}
+.sliderGroup .details {
+  margin-top: 0;
+}
+.twoControls {
+  margin-top: 12px;
+}
+.explanation {
+  scroll-margin-top: 24px;
+}
+.notification {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: max-content;
+  max-width: min(560px, calc(100% - 32px));
+  padding: 12px 14px 12px 20px;
+  background: #253b30;
+  color: #faf9f4;
+  border-radius: 6px;
+  box-shadow: 0 6px 24px #253b3026;
+}
+.notification p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.notification button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+}
+.notification button:hover {
+  background: #415b49;
+}
+.notification button:focus-visible {
+  outline-color: #faf9f4;
+}
+.notification svg {
+  width: 16px;
+  height: 16px;
+}
+@media (max-width: 650px) {
+  .introCompact {
+    margin: 28px 0;
+    gap: 16px;
+  }
+  .brand {
+    gap: 9px;
+  }
 }

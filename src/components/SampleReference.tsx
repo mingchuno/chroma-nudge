@@ -33,9 +33,13 @@ export function SampleReference({
       <div className={styles.sectionTitle}>
         <h2 id="reference-title">Your edit reference</h2>
       </div>
-      <p className={styles.referenceIntro}>
-        Name each region. Anchor one color to keep it steady while the harmony fits around it.
-      </p>
+      <details className={styles.referenceHelp}>
+        <summary>Reading & using this reference</summary>
+        <p>Name each region. Anchor one color to keep it steady while the harmony fits around it.</p>
+        <p>
+          Original colors are on the left; suggested colors are on the right. Click a hex value to copy it.
+        </p>
+      </details>
       {!samples.length && (
         <p className={styles.sampleEmpty}>
           Your sampled colors will appear here.

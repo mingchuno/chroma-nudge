@@ -93,6 +93,7 @@ test('honors anchor, strength and custom drag and exports a safe reference sheet
   ).toBe(true);
   await page.getByRole('slider', { name: 'Nudge strength', exact: true }).focus();
   await page.keyboard.press('End');
+  await page.getByText('Fine-tune the nudge', { exact: true }).click();
   await page.getByRole('slider', { name: 'Maximum move', exact: true }).focus();
   await page.keyboard.press('End');
   await page.getByRole('combobox', { name: 'Harmony', exact: true }).selectOption('custom');
@@ -147,4 +148,49 @@ test('rejects unsupported files and keeps the workspace usable', async ({ page, 
   await expect(page.locator('ol > li')).toHaveCount(6);
   await page.getByRole('button', { name: 'Clear workspace', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Start with a photograph.' })).toBeVisible();
+});
+
+test('keeps action feedback visible while scrolling and exposes technical help', async ({
+  page,
+  baseURL,
+}) => {
+  await page.goto(baseURL ?? standalone);
+  await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
+  await page.getByRole('button', { name: 'Dismiss notification' }).click();
+  await expect(page.getByRole('status', { name: '', exact: true })).toBeEmpty();
+  await page.getByText('Fine-tune the nudge', { exact: true }).click();
+  await expect(page.getByRole('slider', { name: 'Maximum move', exact: true })).toBeVisible();
+  await page.getByText('Reading & using this reference', { exact: true }).click();
+  await expect(page.getByText('Original colors are on the left;', { exact: false })).toBeVisible();
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    const pending = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export reference sheet' }).click();
+    await pending;
+    await expect(page.getByRole('status', { name: '', exact: true })).toContainText(
+      'Reference sheet exported.',
+    );
+    await expect(page.getByRole('button', { name: 'Dismiss notification' })).toBeInViewport();
+    await page.getByRole('button', { name: 'Dismiss notification' }).click();
+    await expect(page.getByRole('status', { name: '', exact: true })).toBeEmpty();
+  }
+  await page.getByRole('link', { name: 'How it works' }).click();
+  await expect(page.getByRole('heading', { name: 'A direction, not a prescription.' })).toBeInViewport();
+});
+
+test('dismisses a notification with one click throughout its close target', async ({ page, baseURL }) => {
+  await page.goto(baseURL ?? standalone);
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const offset of [-20, 0, 20]) {
+      await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
+      const close = page.getByRole('button', { name: 'Dismiss notification' });
+      const bounds = await close.boundingBox();
+      if (!bounds) throw new Error('Notification close target is missing');
+      await page.mouse.click(bounds.x + bounds.width / 2 + offset, bounds.y + bounds.height / 2);
+      await expect(close).toHaveCount(0);
+      await page.getByRole('button', { name: 'Clear workspace', exact: true }).click();
+      await page.getByRole('button', { name: 'Dismiss notification' }).click();
+    }
+  }
 });
