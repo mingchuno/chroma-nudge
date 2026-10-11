@@ -1,0 +1,87 @@
+@font-face {
+  font-family: "Newsreader Variable";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("@fontsource-variable/newsreader/files/newsreader-latin-wght-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Newsreader Variable";
+  font-style: italic;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("@fontsource-variable/newsreader/files/newsreader-latin-wght-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "DM Sans Variable";
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+  src: url("@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2") format("woff2");
+}
+:root {
+  font-family: "DM Sans Variable", sans-serif;
+  color: #253b30;
+  background: #f4f1e9;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button,
+a,
+input,
+select,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #a14d30;
+  outline-offset: 4px;
+}
+input {
+  caret-color: #a14d30;
+}
+::selection {
+  color: #fff;
+  background: #57715c;
+}
+* {
+  scrollbar-color: #9caa9e #f4f1e9;
+  scrollbar-width: thin;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none;
+    transition: none;
+    scroll-behavior: auto;
+  }
+}
