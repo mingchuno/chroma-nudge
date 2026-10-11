@@ -30,3 +30,10 @@ test('packaging includes dependency licenses without a separate notices document
     assert.ok(standalone.includes(license.replaceAll('--', '—')), `Missing license for ${dependency}`);
   }
 });
+
+test('downloadable app embeds its favicon and omits hosted installation metadata', async () => {
+  const standalone = await readFile('dist/chroma-nudge.html', 'utf8');
+  assert.match(standalone, /rel="icon"[^>]+href="data:image\/svg\+xml;base64,/);
+  assert.ok(!standalone.includes('rel="manifest"'));
+  assert.ok(!standalone.includes('rel="apple-touch-icon"'));
+});

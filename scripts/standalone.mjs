@@ -12,6 +12,12 @@ html = html.replace(
   () => `<script type="module">${javascript.replaceAll('</script', '<\\/script')}</script>`,
 );
 html = html.replace(stylesheet[0], () => `<style>${css}</style>`);
+const favicon = await readFile('dist/favicon.svg');
+html = html.replace(/<link\b[^>]*rel="(?:icon|alternate icon|apple-touch-icon|manifest)"[^>]*>/g, '');
+html = html.replace(
+  '</head>',
+  `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,${favicon.toString('base64')}" /></head>`,
+);
 html = html.replace(
   '<head>',
   `<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">`,
