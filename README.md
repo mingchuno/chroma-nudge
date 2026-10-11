@@ -51,7 +51,7 @@ Studies are transient. Clearing or closing discards them. JSON export is a refer
 - `src/components/`: photo sampling, wheel, and reference presentation.
 - `scripts/standalone.mjs`: packaging; `tests/`: browser behavior and privacy checks.
 
-Bundled React and font licenses are included in `THIRD_PARTY_NOTICES.md` and the standalone HTML.
+The build reads React and font licenses from the installed packages and embeds them in the standalone HTML. No separate notices document needs to be maintained.
 
 ## GitHub Pages
 

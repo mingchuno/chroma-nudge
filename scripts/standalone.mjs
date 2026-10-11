@@ -16,7 +16,20 @@ html = html.replace(
   '<head>',
   `<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">`,
 );
-const notices = await readFile('THIRD_PARTY_NOTICES.md', 'utf8');
+const bundledDependencies = [
+  'react',
+  'react-dom',
+  '@fontsource-variable/newsreader',
+  '@fontsource-variable/dm-sans',
+];
+const notices = (
+  await Promise.all(
+    bundledDependencies.map(async (dependency) => {
+      const license = await readFile(resolve('node_modules', dependency, 'LICENSE'), 'utf8');
+      return `${dependency}\n\n${license}`;
+    }),
+  )
+).join('\n\n');
 html += `\n<!--\n${notices.replaceAll('--', '—')}\n-->`;
 await writeFile('dist/chroma-nudge.html', html);
 console.log('Standalone app: dist/chroma-nudge.html');
