@@ -1,12 +1,25 @@
-import { useMemo, useRef, useState } from 'react';
-import type { WheelMode } from './components/ColorWheel';
-import { hasMeaningfulHue } from './domain/color';
+import { type SetStateAction, useMemo, useRef, useState } from 'react';
+import { type Hsl, hasMeaningfulHue } from './domain/color';
 import { fitHarmony, type HarmonyKind, rankHarmonies } from './domain/harmony';
 import { createDemo, decodePhoto, type Photo, type Sample, samplePhoto } from './domain/photo';
+export type WheelMode = 'natural' | 'pure' | 'guide';
 export type Selection = 'auto' | 'custom' | HarmonyKind;
 export function usePhotoStudy() {
   const [photo, setPhoto] = useState<Photo>();
-  const [samples, setSamples] = useState<Sample[]>([]);
+  const [{ samples, colors }, setSampleCollection] = useState<{ samples: Sample[]; colors: Hsl[] }>({
+    samples: [],
+    colors: [],
+  });
+  // Keep fitting inputs stable when only names or custom targets change.
+  function setSamples(update: SetStateAction<Sample[]>) {
+    setSampleCollection((previous) => {
+      const samples = typeof update === 'function' ? update(previous.samples) : update;
+      const sameColors =
+        samples.length === previous.colors.length &&
+        samples.every((sample, index) => sample.color === previous.colors[index]);
+      return { samples, colors: sameColors ? previous.colors : samples.map((sample) => sample.color) };
+    });
+  }
   const [selectedId, setSelectedId] = useState<number>();
   const [anchorId, setAnchorId] = useState<number>();
   const [selection, setSelection] = useState<Selection>('auto');
@@ -22,7 +35,6 @@ export function usePhotoStudy() {
   const fileInput = useRef<HTMLInputElement>(null);
   const nextId = useRef(1);
   const importSequence = useRef(0);
-  const colors = useMemo(() => samples.map((sample) => sample.color), [samples]);
   const anchorIndex =
     anchorId === undefined ? undefined : samples.findIndex((sample) => sample.id === anchorId);
   const rankings = useMemo(() => rankHarmonies(colors, anchorIndex), [colors, anchorIndex]);
@@ -47,9 +59,7 @@ export function usePhotoStudy() {
       const decoded = await decodePhoto(file);
       if (sequence !== importSequence.current) return;
       setPhoto(decoded);
-      setSamples([]);
-      setAnchorId(undefined);
-      setSelectedId(undefined);
+      clearSamples();
       setSelection('auto');
       setMode('natural');
       nextId.current = 1;
@@ -90,6 +100,20 @@ export function usePhotoStudy() {
     if (anchorId === id) setAnchorId(undefined);
     if (selectedId === id) setSelectedId(undefined);
   }
+  function clearSamples() {
+    setSamples([]);
+    setSelectedId(undefined);
+    setAnchorId(undefined);
+  }
+
+  function clearWorkspace() {
+    ++importSequence.current;
+    setIsLoading(false);
+    setPhoto(undefined);
+    clearSamples();
+    setMessage('Photo cleared from this workspace.');
+  }
+
   function loadDemo() {
     ++importSequence.current;
     setIsLoading(false);
@@ -126,9 +150,7 @@ export function usePhotoStudy() {
 
   return {
     photo,
-    setPhoto,
     samples,
-    setSamples,
     selectedId,
     setSelectedId,
     anchorId,
@@ -148,11 +170,9 @@ export function usePhotoStudy() {
     setMessage,
     error,
     isLoading,
-    setIsLoading,
     isDraggingFile,
     setIsDraggingFile,
     fileInput,
-    importSequence,
     rankings,
     fit,
     isCustom,
@@ -162,6 +182,8 @@ export function usePhotoStudy() {
     placeSample,
     updateSample,
     removeSample,
+    clearSamples,
+    clearWorkspace,
     loadDemo,
     copyHex,
     chooseHarmony,

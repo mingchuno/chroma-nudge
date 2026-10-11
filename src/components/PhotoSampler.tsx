@@ -1,7 +1,7 @@
 import { type KeyboardEvent, type PointerEvent, useRef } from 'react';
 import { hslToHex } from '../domain/color';
 import type { Photo, Sample } from '../domain/photo';
-import styles from './Workspace.module.css';
+import styles from './PhotoSampler.module.css';
 
 interface Props {
   photo: Photo;

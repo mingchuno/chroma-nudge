@@ -1,0 +1,48 @@
+.photoFrame {
+  background: #e7e9df;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px;
+  min-height: 260px;
+}
+.photoSurface {
+  position: relative;
+  width: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+.photoSurface img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  object-fit: contain;
+}
+.photoPoint {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid white;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: 0 1px 3px #000;
+  cursor: grab;
+  box-shadow: 0 2px 5px #0004;
+  touch-action: none;
+  padding: 0;
+}
+.selectedPoint {
+  outline: 2px solid #253b30;
+  outline-offset: 3px;
+  z-index: 2;
+}
+.photoSurface {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
+}

@@ -1,8 +1,12 @@
-import { hasMeaningfulHue, hslToHex, hueName } from '../domain/color';
-import { buildReference, downloadFile, type ReferenceOptions, referenceSvg } from '../domain/export';
-import { suggestNudge } from '../domain/harmony';
+import { downloadFile } from '../browser/download';
+import { referencePng } from '../browser/referencePng';
+import { hueName } from '../domain/color';
+import { buildReference, type ReferenceOptions } from '../domain/export';
 import type { Sample } from '../domain/photo';
-import styles from './Workspace.module.css';
+import { referenceSvg } from '../domain/referenceSheet';
+import { analyzeSample } from '../domain/sampleAnalysis';
+import styles from './SampleReference.module.css';
+import sharedStyles from './Shared.module.css';
 
 interface Props {
   samples: Sample[];
@@ -26,11 +30,11 @@ export function SampleReference({
   onCopy: copyHex,
   onMessage: setMessage,
 }: Props) {
-  const { fit, custom: isCustom, anchorId, strength, maxShift, tolerance } = options;
+  const { anchorId } = options;
   const reference = buildReference(samples, options);
   return (
     <section className={styles.referenceColumn} aria-labelledby="reference-title">
-      <div className={styles.sectionTitle}>
+      <div className={sharedStyles.sectionTitle}>
         <h2 id="reference-title">Your edit reference</h2>
       </div>
       <details className={styles.referenceHelp}>
@@ -49,19 +53,11 @@ export function SampleReference({
       )}
       <ol className={styles.samples}>
         {samples.map((sample, index) => {
-          const targetHue = isCustom
-            ? (sample.customHue ?? sample.color.h)
-            : (fit?.targets[index] ?? sample.color.h);
-          const nudge = suggestNudge(sample.color, {
-            targetHue,
-            strength,
-            maxShift,
-            tolerance,
-            isLocked: sample.id === anchorId,
-          });
-          const original = hslToHex(sample.color);
-          const suggested = hslToHex(nudge.color);
-          const protectedNeutral = !hasMeaningfulHue(sample.color);
+          const { targetHue, nudge, original, suggested, protectedNeutral } = analyzeSample(
+            sample,
+            index,
+            options,
+          );
           return (
             <li key={sample.id} className={selectedId === sample.id ? styles.activeSample : ''}>
               <div className={styles.sampleHeading}>
@@ -149,18 +145,34 @@ export function SampleReference({
         <p>Keep this study beside your editor.</p>
         <button
           type="button"
-          className={styles.primary}
+          className={sharedStyles.primary}
           disabled={!samples.length}
-          onClick={() => {
-            downloadFile(referenceSvg(reference), 'chroma-nudge-reference.svg', 'image/svg+xml');
-            setMessage('Reference sheet exported. Open it in a browser or image viewer.');
+          onClick={async () => {
+            try {
+              const png = await referencePng(reference);
+              downloadFile(png, 'chroma-nudge-reference.png', 'image/png');
+              setMessage('Reference sheet exported. Open it in a browser or image viewer.');
+            } catch {
+              setMessage('Could not export PNG. Try again or export as SVG.');
+            }
           }}
         >
           Export reference sheet
         </button>
         <button
           type="button"
-          className={styles.textButton}
+          className={`${sharedStyles.textButton} ${styles.exportLink}`}
+          disabled={!samples.length}
+          onClick={() => {
+            downloadFile(referenceSvg(reference), 'chroma-nudge-reference.svg', 'image/svg+xml');
+            setMessage('Reference sheet exported as SVG.');
+          }}
+        >
+          Export as SVG
+        </button>
+        <button
+          type="button"
+          className={`${sharedStyles.textButton} ${styles.exportLink}`}
           disabled={!samples.length}
           onClick={() => {
             downloadFile(

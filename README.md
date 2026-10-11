@@ -10,7 +10,7 @@ Double-click `dist/chroma-nudge.html`. It contains the app, styles, and fonts. P
 2. Click regions of interest. Drag dots, or focus them and use arrow keys (Shift moves 10 pixels). Name up to 16 samples.
 3. Compare Natural, Pure hues, and Harmony guide. Choose a harmony or automatic fitting. Anchor one chromatic sample if its color should stay fixed.
 4. Adjust strength, move cap, and alignment tolerance. Custom mode supports independent target dragging and numeric hue entry for the selected sample.
-5. Export an SVG reference sheet or a JSON study. Exports contain colors and coordinates, not the photo. Hex buttons copy colors when the browser permits clipboard access.
+5. Export a PNG reference sheet, an editable SVG, or a JSON study. PNG sheets use 2× resolution for crisp text. Exports contain colors and coordinates, not the photo. Hex buttons copy colors when the browser permits clipboard access.
 
 ## Development
 
@@ -46,7 +46,9 @@ Studies are transient. Clearing or closing discards them. JSON export is a refer
 - `src/domain/color.ts`: sRGB/HSL conversion and hue arithmetic.
 - `src/domain/harmony.ts`: deterministic fitting, ranking, and nudges.
 - `src/domain/photo.ts`: image decoding and patch sampling.
-- `src/domain/export.ts`: portable references and safe SVG generation.
+- `src/domain/sampleAnalysis.ts`: shared target and nudge calculations.
+- `src/domain/export.ts`: portable reference data; `referenceSheet.ts`: SVG formatting.
+- `src/browser/`: PNG rendering and file downloads.
 - `src/usePhotoStudy.ts`: workspace state and photo import lifecycle.
 - `src/components/`: photo sampling, wheel, and reference presentation.
 - `scripts/standalone.mjs`: packaging; `tests/`: browser behavior and privacy checks.

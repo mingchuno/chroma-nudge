@@ -117,8 +117,20 @@ test('honors anchor, strength and custom drag and exports a safe reference sheet
   const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export reference sheet' }).click();
   const download = await pending;
-  expect(download.suggestedFilename()).toBe('chroma-nudge-reference.svg');
-  const stream = await download.createReadStream();
+  expect(download.suggestedFilename()).toBe('chroma-nudge-reference.png');
+  const pngStream = await download.createReadStream();
+  if (!pngStream) throw new Error('No PNG stream');
+  const pngChunks: Buffer[] = [];
+  for await (const chunk of pngStream) pngChunks.push(Buffer.from(chunk));
+  const png = Buffer.concat(pngChunks);
+  expect(png.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  expect(png.readUInt32BE(16)).toBe(1600);
+  expect(png.readUInt32BE(20)).toBe(2 * (230 + reference.samples.length * 90));
+  const pendingSvg = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export as SVG', exact: true }).click();
+  const svgDownload = await pendingSvg;
+  expect(svgDownload.suggestedFilename()).toBe('chroma-nudge-reference.svg');
+  const stream = await svgDownload.createReadStream();
   if (!stream) throw new Error('No SVG stream');
   const chunks: Buffer[] = [];
   for await (const chunk of stream) chunks.push(Buffer.from(chunk));
@@ -182,15 +194,102 @@ test('dismisses a notification with one click throughout its close target', asyn
   await page.goto(baseURL ?? standalone);
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 800 });
-    for (const offset of [-20, 0, 20]) {
+    for (const fraction of [0.1, 0.5, 0.9]) {
       await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
       const close = page.getByRole('button', { name: 'Dismiss notification' });
       const bounds = await close.boundingBox();
       if (!bounds) throw new Error('Notification close target is missing');
-      await page.mouse.click(bounds.x + bounds.width / 2 + offset, bounds.y + bounds.height / 2);
+      await page.mouse.click(bounds.x + bounds.width * fraction, bounds.y + bounds.height / 2);
       await expect(close).toHaveCount(0);
       await page.getByRole('button', { name: 'Clear workspace', exact: true }).click();
       await page.getByRole('button', { name: 'Dismiss notification' }).click();
     }
   }
 });
+
+test('clear preserves nudge settings while demo resets selection and samples', async ({ page, baseURL }) => {
+  await page.goto(baseURL ?? standalone);
+  await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
+  await page.getByRole('combobox', { name: 'Harmony', exact: true }).selectOption('custom');
+  await page.getByRole('slider', { name: 'Nudge strength' }).fill('25');
+  await page.getByRole('button', { name: 'Anchor sample 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Clear workspace', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Explore a six-color demo' })).toBeVisible();
+  await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
+  const reference = await exportJson(page);
+  expect(reference.settings.strength).toBe(0.25);
+  expect(reference.samples).toHaveLength(6);
+  expect(reference.samples.every((sample: { locked: boolean }) => !sample.locked)).toBe(true);
+  await expect(page.getByRole('combobox', { name: 'Harmony', exact: true })).toHaveValue('auto');
+});
+
+for (const replacement of ['clear', 'demo', 'newer import'] as const) {
+  test(`pending import cannot replace ${replacement}`, async ({ page, baseURL }) => {
+    await page.goto(baseURL ?? standalone);
+    await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
+    const png = await page.evaluate(() => {
+      const state = window as unknown as { releaseImports: (() => void)[] };
+      state.releaseImports = [];
+      const decode = window.createImageBitmap.bind(window);
+      window.createImageBitmap = async (source: ImageBitmapSource) => {
+        const bitmap = await decode(source);
+        await new Promise<void>((resolve) => state.releaseImports.push(resolve));
+        return bitmap;
+      };
+      const canvas = document.createElement('canvas');
+      canvas.width = 2;
+      canvas.height = 2;
+      return canvas.toDataURL().split(',')[1] ?? '';
+    });
+    const input = page.locator('input[type=file]');
+    await input.setInputFiles({
+      name: 'older.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(png, 'base64'),
+    });
+    await expect
+      .poll(() =>
+        page.evaluate(() => (window as unknown as { releaseImports: (() => void)[] }).releaseImports.length),
+      )
+      .toBe(1);
+    if (replacement === 'clear') {
+      await page.getByRole('button', { name: 'Clear workspace', exact: true }).click();
+    } else if (replacement === 'demo') {
+      await page.getByRole('button', { name: 'Clear workspace', exact: true }).click();
+      await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
+    } else {
+      await input.setInputFiles({
+        name: 'newer.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from(png, 'base64'),
+      });
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => (window as unknown as { releaseImports: (() => void)[] }).releaseImports.length,
+          ),
+        )
+        .toBe(2);
+      await page.evaluate(() =>
+        (window as unknown as { releaseImports: (() => void)[] }).releaseImports[1]?.(),
+      );
+      await expect(page.getByRole('img', { name: 'newer.png', exact: true })).toBeVisible();
+    }
+    await page.evaluate(async () => {
+      (window as unknown as { releaseImports: (() => void)[] }).releaseImports[0]?.();
+      await new Promise(requestAnimationFrame);
+      await new Promise(requestAnimationFrame);
+    });
+    await expect(page.getByRole('img', { name: 'older.png', exact: true })).toHaveCount(0);
+    if (replacement === 'clear') {
+      await expect(page.getByRole('heading', { name: 'Start with a photograph.' })).toBeVisible();
+    } else {
+      await expect(
+        page.getByRole('img', {
+          name: replacement === 'demo' ? 'Six-color study (demo)' : 'newer.png',
+          exact: true,
+        }),
+      ).toBeVisible();
+    }
+  });
+}

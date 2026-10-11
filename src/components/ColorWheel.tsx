@@ -3,9 +3,9 @@ import { hasMeaningfulHue, hslToHex, wrapHue } from '../domain/color';
 import type { HarmonyFit } from '../domain/harmony';
 import { templates } from '../domain/harmony';
 import type { Sample } from '../domain/photo';
-import styles from './Workspace.module.css';
+import type { WheelMode } from '../usePhotoStudy';
+import styles from './ColorWheel.module.css';
 
-export type WheelMode = 'natural' | 'pure' | 'guide';
 interface Props {
   samples: Sample[];
   fit?: HarmonyFit;
