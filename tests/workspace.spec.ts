@@ -408,3 +408,17 @@ test('magnifies the active sample during dragging and dismisses on release or ca
   await touch.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
   await expect(loupe).toHaveCount(0);
 });
+
+test('clearing the workspace dismisses a failed import error', async ({ page, baseURL }) => {
+  await page.goto(baseURL ?? standalone);
+  await page.getByRole('button', { name: 'Explore a six-color demo' }).click();
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'unsupported.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('invalid'),
+  });
+  await expect(page.getByRole('alert')).toBeVisible();
+  await page.getByRole('button', { name: 'Clear workspace', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Start with a photograph.' })).toBeVisible();
+});

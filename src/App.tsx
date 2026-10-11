@@ -1,8 +1,11 @@
+import { useRef, useState } from 'react';
 import styles from './App.module.css';
+import { copyHex } from './browser/clipboard';
 import { HarmonyPanel } from './components/HarmonyPanel';
 import { PhotoSampler } from './components/PhotoSampler';
 import { SampleReference } from './components/SampleReference';
 import sharedStyles from './components/Shared.module.css';
+import { MAX_SAMPLES } from './domain/samplingPolicy';
 import { usePhotoStudy } from './usePhotoStudy';
 
 function UploadIcon() {
@@ -15,6 +18,11 @@ function UploadIcon() {
 
 export function App() {
   const study = usePhotoStudy();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  async function copySampleHex(hex: string) {
+    setMessage(await copyHex(hex));
+  }
   const {
     photo,
     samples,
@@ -35,9 +43,6 @@ export function App() {
     canUndoAutoSample,
     autoSample,
     undoAutoSample,
-    isDraggingFile,
-    setIsDraggingFile,
-    fileInput,
     fit,
     isCustom,
     importPhoto,
@@ -47,7 +52,6 @@ export function App() {
     clearSamples,
     clearWorkspace,
     loadDemo,
-    copyHex,
   } = study;
 
   return (
@@ -159,7 +163,9 @@ export function App() {
               <section aria-labelledby="photo-title">
                 <div className={sharedStyles.sectionTitle}>
                   <h2 id="photo-title">Your photo</h2>
-                  <span>{samples.length} / 16 samples</span>
+                  <span>
+                    {samples.length} / {MAX_SAMPLES} samples
+                  </span>
                 </div>
                 <PhotoSampler
                   photo={photo}
@@ -173,7 +179,7 @@ export function App() {
                   <button
                     type="button"
                     className={sharedStyles.secondary}
-                    disabled={isLoading || samples.length >= 16}
+                    disabled={isLoading || samples.length >= MAX_SAMPLES}
                     onClick={autoSample}
                   >
                     Auto sample
@@ -206,7 +212,7 @@ export function App() {
                   <button
                     type="button"
                     className={`${sharedStyles.secondary} ${styles.sampleActionButton}`}
-                    disabled={samples.length >= 16}
+                    disabled={samples.length >= MAX_SAMPLES}
                     onClick={() => placeSample({ x: 0.5, y: 0.5 })}
                   >
                     Add center sample
@@ -235,7 +241,18 @@ export function App() {
                   </p>
                 </details>
               </section>
-              <HarmonyPanel study={study} />
+              <HarmonyPanel
+                view={study}
+                actions={{
+                  selectSample: setSelectedId,
+                  updateSample,
+                  changeMode: study.setMode,
+                  chooseHarmony: study.chooseHarmony,
+                  changeStrength: study.setStrength,
+                  changeMaxShift: study.setMaxShift,
+                  changeTolerance: study.setTolerance,
+                }}
+              />
               <SampleReference
                 samples={samples}
                 selectedId={selectedId}
@@ -253,7 +270,7 @@ export function App() {
                 onAnchor={setAnchorId}
                 onUpdate={updateSample}
                 onRemove={removeSample}
-                onCopy={copyHex}
+                onCopy={copySampleHex}
                 onMessage={setMessage}
               />
             </div>

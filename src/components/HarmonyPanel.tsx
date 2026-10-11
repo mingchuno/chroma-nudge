@@ -1,37 +1,14 @@
 import { templates } from '../domain/harmony';
-import type { Selection, usePhotoStudy, WheelMode } from '../usePhotoStudy';
+import type { HarmonyActions, HarmonyView, Selection, WheelMode } from '../domain/harmonyControls';
 import { ColorWheel } from './ColorWheel';
 import styles from './HarmonyPanel.module.css';
 import sharedStyles from './Shared.module.css';
 
-type HarmonyControls = Pick<
-  ReturnType<typeof usePhotoStudy>,
-  | 'samples'
-  | 'fit'
-  | 'mode'
-  | 'isCustom'
-  | 'selectedId'
-  | 'selected'
-  | 'chromaticCount'
-  | 'selection'
-  | 'strength'
-  | 'maxShift'
-  | 'tolerance'
-  | 'rankings'
-  | 'setSelectedId'
-  | 'updateSample'
-  | 'setMode'
-  | 'chooseHarmony'
-  | 'setStrength'
-  | 'setMaxShift'
-  | 'setTolerance'
->;
-
 interface Props {
-  study: HarmonyControls;
+  view: HarmonyView;
+  actions: HarmonyActions;
 }
-
-export function HarmonyPanel({ study }: Props) {
+export function HarmonyPanel({ view, actions }: Props) {
   const {
     samples,
     fit,
@@ -45,14 +22,16 @@ export function HarmonyPanel({ study }: Props) {
     maxShift,
     tolerance,
     rankings,
-    setSelectedId,
+  } = view;
+  const {
+    selectSample: setSelectedId,
     updateSample,
-    setMode,
+    changeMode: setMode,
     chooseHarmony,
-    setStrength,
-    setMaxShift,
-    setTolerance,
-  } = study;
+    changeStrength: setStrength,
+    changeMaxShift: setMaxShift,
+    changeTolerance: setTolerance,
+  } = actions;
   return (
     <section className={styles.wheelColumn} aria-labelledby="wheel-title">
       <div className={sharedStyles.sectionTitle}>

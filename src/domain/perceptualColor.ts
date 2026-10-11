@@ -1,5 +1,6 @@
 import type { Hsl, Rgb } from './color';
 import { hslToRgb } from './color';
+import { SIMILAR_COLOR_DISTANCE_SQUARED } from './samplingPolicy';
 
 export interface Oklab {
   l: number;
@@ -32,5 +33,8 @@ export function colorDistanceSquared(left: Oklab, right: Oklab): number {
 }
 
 export function areSimilarColors(left: Hsl, right: Hsl): boolean {
-  return colorDistanceSquared(rgbToOklab(hslToRgb(left)), rgbToOklab(hslToRgb(right))) < 0.045 ** 2;
+  return (
+    colorDistanceSquared(rgbToOklab(hslToRgb(left)), rgbToOklab(hslToRgb(right))) <
+    SIMILAR_COLOR_DISTANCE_SQUARED
+  );
 }

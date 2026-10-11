@@ -2,8 +2,8 @@ import { type PointerEvent, useRef } from 'react';
 import { hasMeaningfulHue, hslToHex, wrapHue } from '../domain/color';
 import type { HarmonyFit } from '../domain/harmony';
 import { templates } from '../domain/harmony';
+import type { WheelMode } from '../domain/harmonyControls';
 import type { Sample } from '../domain/photo';
-import type { WheelMode } from '../usePhotoStudy';
 import styles from './ColorWheel.module.css';
 
 interface Props {

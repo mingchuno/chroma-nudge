@@ -1,6 +1,7 @@
 import { rgbToHsl } from './color';
 import { colorDistanceSquared, type Oklab, rgbToOklab } from './perceptualColor';
-import { type Photo, type Sample, samplePhotoRgb } from './photo';
+import { type PhotoPixels, type Sample, samplePhotoRgb } from './photo';
+import { SIMILAR_COLOR_DISTANCE_SQUARED } from './samplingPolicy';
 
 export type AutoSampleCount = 4 | 5 | 6;
 type PhotoSample = Pick<Sample, 'x' | 'y' | 'color'>;
@@ -15,10 +16,9 @@ interface Cluster {
 
 const MAX_CANDIDATES = 16_000;
 const MAX_ITERATIONS = 20;
-const MERGE_DISTANCE_SQUARED = 0.045 ** 2;
 const MIN_COVERAGE = 0.02;
 
-function collectCandidates(photo: Photo): Candidate[] {
+function collectCandidates(photo: PhotoPixels): Candidate[] {
   const scale = Math.min(1, Math.sqrt(MAX_CANDIDATES / (photo.width * photo.height)));
   const columns = Math.max(1, Math.floor(photo.width * scale));
   const rows = Math.max(1, Math.min(Math.floor(photo.height * scale), Math.floor(MAX_CANDIDATES / columns)));
@@ -118,7 +118,7 @@ function mergeSimilarClusters(clusters: Cluster[]): Cluster[] {
   const merged = [...clusters];
   while (merged.length > 1) {
     let pair: [number, number] | undefined;
-    let closest = MERGE_DISTANCE_SQUARED;
+    let closest = SIMILAR_COLOR_DISTANCE_SQUARED;
     for (let left = 0; left < merged.length; left++) {
       for (let right = left + 1; right < merged.length; right++) {
         const distance = colorDistanceSquared(
@@ -166,7 +166,7 @@ function representativeSample(cluster: Cluster): PhotoSample {
   return { x: best.x, y: best.y, color: best.color };
 }
 
-export function extractPhotoSamples(photo: Photo, count: AutoSampleCount): PhotoSample[] {
+export function extractPhotoSamples(photo: PhotoPixels, count: AutoSampleCount): PhotoSample[] {
   const candidates = collectCandidates(photo);
   const clusters = mergeSimilarClusters(fitClusters(candidates, count));
   return clusters

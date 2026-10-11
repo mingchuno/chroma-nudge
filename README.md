@@ -49,12 +49,15 @@ Studies are transient. Clearing or closing discards them. JSON export is a refer
 
 - `src/domain/color.ts`: sRGB/HSL conversion and hue arithmetic.
 - `src/domain/harmony.ts`: deterministic fitting, ranking, and nudges.
-- `src/domain/photo.ts`: image decoding and patch sampling.
+- `src/domain/photo.ts`: photo/sample types and pure patch sampling.
 - `src/domain/autoSample.ts`: deterministic dominant-color extraction; `perceptualColor.ts`: Oklab conversion and comparison.
 - `src/domain/sampleAnalysis.ts`: shared target and nudge calculations.
 - `src/domain/export.ts`: portable reference data; `referenceSheet.ts`: SVG formatting.
-- `src/browser/`: PNG rendering and file downloads.
-- `src/usePhotoStudy.ts`: workspace state and photo import lifecycle.
+- `src/browser/`: photo decoding, demo rendering, clipboard, PNG rendering, and file downloads.
+- `src/domain/studyState.ts`: atomic sample, selection, anchor, and undo transitions.
+- `src/domain/harmonyControls.ts`: explicit harmony view and action contracts.
+- `src/domain/samplingPolicy.ts`: shared capacity and color similarity thresholds.
+- `src/usePhotoStudy.ts`: study orchestration, fitting, and photo import lifecycle.
 - `src/components/`: photo sampling, wheel, and reference presentation.
 - `scripts/standalone.mjs`: packaging; `tests/`: browser behavior and privacy checks.
 

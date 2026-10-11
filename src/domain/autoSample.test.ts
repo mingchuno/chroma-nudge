@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { extractPhotoSamples } from './autoSample';
 import { hslToHex } from './color';
-import { type Photo, samplePhoto } from './photo';
+import { type PhotoPixels, samplePhoto } from './photo';
 
-function stripedPhoto(colors: number[][], width = 240, height = 80): Photo {
+function stripedPhoto(colors: number[][], width = 240, height = 80): PhotoPixels {
   const pixels = new Uint8ClampedArray(width * height * 4);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -11,7 +11,7 @@ function stripedPhoto(colors: number[][], width = 240, height = 80): Photo {
       pixels.set([...rgb, 255], (y * width + x) * 4);
     }
   }
-  return { width, height, pixels: { data: pixels } as ImageData, name: 'fixture', url: '' };
+  return { width, height, pixels: { data: pixels } };
 }
 
 describe('automatic photo sampling', () => {
