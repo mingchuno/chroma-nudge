@@ -58,26 +58,3 @@ Studies are transient. Clearing or closing discards them. JSON export is a refer
 The [design principles](DESIGN.md) describe the workspace layout, visual hierarchy, and interaction priorities.
 
 The build reads React and font licenses from the installed packages and embeds them in the standalone HTML. No separate notices document needs to be maintained.
-
-## GitHub Pages
-
-Target repository: `mingchuno/chroma-nudge`. Custom domain: `color.mcor.dev`.
-
-The Pages workflow validates pull requests, and deploys successful `main` pushes or manual runs on `main`. It enforces Node 24 and installs the pnpm version from `package.json` using the frozen lockfile. Type checks, recommended Biome rules, domain tests, build integrity, and Chromium tests must pass before deployment. Browser tests cover both the downloadable HTML and a hosted project-path URL.
-
-The generated `pages/index.html` embeds the app, styles, and fonts. Its Content Security Policy permits same-origin installation assets while still blocking app network connections. The manifest and icons use relative paths so installation works at both the project path and custom-domain root. `pages/` and `dist/` are generated and ignored.
-
-Repository and domain configuration:
-
-1. In the repository Settings → Pages, select **GitHub Actions** as the build source.
-2. Set the custom domain to **color.mcor.dev** in Pages settings. Actions deployments use that setting; a committed CNAME file is not required.
-3. In DNS, add a CNAME for `color` pointing to **mingchuno.github.io** (no repository path). Verify domain ownership through GitHub's domain verification flow, then enable **Enforce HTTPS** after GitHub provisions the certificate.
-4. Deploy by pushing to `main` or manually running **Check and deploy Pages** on `main`.
-
-Repository Pages settings and DNS are managed separately from the workflow. The workflow does not change DNS records. See [GitHub custom-domain guidance](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
-
-## Mobile installation
-
-Open the hosted HTTPS site. On iPhone or iPad, use Safari’s Share menu → Add to Home Screen and enable Open as Web App if shown. On Android, use the browser menu → Install app or Add to Home screen. The app opens in a standalone window with the Chroma Nudge icon. Installation requires the hosted site; the downloadable HTML remains a self-contained local file.
-
-`public/` contains the SVG favicon source, ICO/PNG fallbacks, 180px Apple touch icon, 192px and 512px app icons, a maskable icon, and `manifest.webmanifest`. The maskable variant keeps the color ring inside the central safe area. The build copies these assets into both `dist/` and `pages/`. No service worker or offline cache is added; hosted use needs a connection to reopen the app. Installing does not save photos or studies.
